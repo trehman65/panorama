@@ -12,8 +12,8 @@ imshow(im2);
 
 
 %points in homogeneous coordinates
-im1Points = [x1 y1 repmat(1,numOfPoints,1)]'
-im2Points = [x2 y2 repmat(1,numOfPoints,1)]'
+im1Points = [x1 y1 repmat(1,numOfPoints,1)]';
+im2Points = [x2 y2 repmat(1,numOfPoints,1)]';
 
 close;
 
@@ -36,8 +36,43 @@ A = zeros(3*N,9);
 
 H = reshape(V(:,9),3,3)';
 
-H=H/H(end);
+% p=H*X';
+% 
+% p=p/p(end)
 
+[h w c] = size(im2);
+
+oldcornerPts=[ 1 1 w w ; 1 h 1 h ; 1 1 1 1 ];
+%in order to generate a grid for the warped image we need to apply
+%the transform to the corner points
+cornerPts = H\oldcornerPts;
+cornerPts = cornerPts./repmat(cornerPts(3,:),3,1);
+
+%since the minimum distance that we have is 1 pixel, find the minimum
+%and the maximum points for both axes and fit a grid with 1 pixel intervals
+[X_grid,Y_grid] = ndgrid( min( cornerPts(1,:) ) : 1 : max( cornerPts(1,:) ),...
+ min( cornerPts(2,:) ) : 1 : max( cornerPts(2,:) ));
+[numRow numCol] = size(X_grid);
+
+% inverse mapping im2points = H * im1points
+im2points = H * [ X_grid(:) Y_grid(:) ones(numRow*numCol,1) ]';
+im2points = im2points./repmat(im2points(3,:),3,1); %normalize homogeneous coordinates
+
+xI = reshape( im2points(1,:),numRow,numCol)';
+yI = reshape( im2points(2,:),numRow,numCol)';
+
+
+im2= im2double(im2);
+imWarped = zeros(numCol,numRow,3);
+
+%interpolate the point values for each color channel
+imWarped(:,:,1) = interp2(im2(:,:,1), xI, yI);
+imWarped(:,:,2) = interp2(im2(:,:,2), xI, yI);
+imWarped(:,:,3) = interp2(im2(:,:,3), xI, yI);
+
+%assign minimum corners as the offset of the image
+cornerPts = round(cornerPts)
+offset = [ min( cornerPts(1,:)) min( cornerPts(2,:) ) ];
 
 
 
