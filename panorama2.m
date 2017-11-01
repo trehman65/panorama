@@ -1,22 +1,34 @@
+function []=panorama2(path1, path2,numOfPoints)
+
+
+clc
 close all
 
-numOfPoints = 4;
-im1=imread('im1.jpg');
-im2=imread('im2.jpg');
+%number of points to be selected in each image
+% numOfPoints = 4;
+
+%load images
+im1=imread(path1);
+im2=imread(path2);
+
+
+%To select corresponding points in images, ginput function of 
+%matlab is used
 
 subplot(1,2,1)
 imshow(im1);
 [x1 y1] = ginput(numOfPoints)
+
 subplot(1,2,2)
 imshow(im2);
 [x2 y2] = ginput(numOfPoints)
 
-
-%points in homogeneous coordinates
+%points are converted to homogeneous coordinates 
 im1Points = [x1 y1 repmat(1,numOfPoints,1)]';
 im2Points = [x2 y2 repmat(1,numOfPoints,1)]';
 
 close;
+
 
 N = length(im1Points);
 A = zeros(3*N,9);
@@ -78,9 +90,9 @@ imWarped(:,:,3) = interp2(im2(:,:,3), xI, yI);
 cornerPts = round(cornerPts)
 offset = [ min( cornerPts(1,:)) min( cornerPts(2,:) ) ];
 
-
-imWarped=double(round(255*imWarped));
 imshow(imWarped)
+imWarped=double(round(255*imWarped));
+
 
 
 
@@ -100,13 +112,6 @@ R=zeros(max2-min2,max1-min1,3,class(im1));
 [h w c]=size(imWarped);
 
 
-for i =1:h1
-    for j =1:w1
-
-        R(i-min2+1,j-min1+1,:) = im1(i, j,:);
-    end
-end
-
 for i =1:h
     for j =1:w
      
@@ -118,15 +123,19 @@ for i =1:h
     end
 end
 
+for i =1:h1
+    for j =1:w1
+
+        R(i-min2+1,j-min1+1,:) = im1(i, j,:);
+    end
+end
+
  
 figure 
 imshow(R)
 
 
-
-
-
-
+end
 
 
 
